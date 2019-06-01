@@ -1,16 +1,11 @@
-# flutter_hack19
+# Chat Demo
 
-A new Flutter project.
+## Description:
+* A chat app made by Flutter and Firebase.
+* Support login with google account, chat with any user, send text, image and sticker, update avatar and profile.
+* Watch the video demo to clearly: https://youtu.be/MOHE68LI5Eg
+* Check my general guidance to know more and how to do it: https://medium.com/@duytq94/building-a-chat-app-with-flutter-and-firebase-from-scratch-9eaa7f41782e
 
-## Getting Started
+## Screenshot:
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+<img src="https://raw.githubusercontent.com/duytq94/flutter-chat-demo/master/screenshots/FlutterChatDemo.gif" height="50%" width="50%">

@@ -1,46 +1,232 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_chat_demo/chat.dart';
+import 'package:flutter_chat_demo/const.dart';
+import 'package:flutter_chat_demo/login.dart';
+import 'package:flutter_chat_demo/settings.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'package:http/http.dart' as http;
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MainScreen extends StatefulWidget {
+  final String currentUserId;
+
+  MainScreen({Key key, @required this.currentUserId}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Stack Overflow',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Flutter Stack Overflow Page'),
-    );
+  State createState() => MainScreenState(currentUserId: currentUserId);
+}
+
+class MainScreenState extends State<MainScreen> {
+  MainScreenState({Key key, @required this.currentUserId});
+
+  final String currentUserId;
+
+  bool isLoading = false;
+  List<Choice> choices = const <Choice>[
+    const Choice(title: 'Settings', icon: Icons.settings),
+    const Choice(title: 'Log out', icon: Icons.exit_to_app),
+  ];
+
+  Future<bool> onBackPress() {
+    openDialog();
+    return Future.value(false);
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
+  Future<Null> openDialog() async {
+    switch (await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            contentPadding: EdgeInsets.only(left: 0.0, right: 0.0, top: 0.0, bottom: 0.0),
+            children: <Widget>[
+              Container(
+                color: themeColor,
+                margin: EdgeInsets.all(0.0),
+                padding: EdgeInsets.only(bottom: 10.0, top: 10.0),
+                height: 100.0,
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      child: Icon(
+                        Icons.exit_to_app,
+                        size: 30.0,
+                        color: Colors.white,
+                      ),
+                      margin: EdgeInsets.only(bottom: 10.0),
+                    ),
+                    Text(
+                      'Exit app',
+                      style: TextStyle(color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Are you sure to exit app?',
+                      style: TextStyle(color: Colors.white70, fontSize: 14.0),
+                    ),
+                  ],
+                ),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, 0);
+                },
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      child: Icon(
+                        Icons.cancel,
+                        color: primaryColor,
+                      ),
+                      margin: EdgeInsets.only(right: 10.0),
+                    ),
+                    Text(
+                      'CANCEL',
+                      style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, 1);
+                },
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      child: Icon(
+                        Icons.check_circle,
+                        color: primaryColor,
+                      ),
+                      margin: EdgeInsets.only(right: 10.0),
+                    ),
+                    Text(
+                      'YES',
+                      style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
+              ),
+            ],
+          );
+        })) {
+      case 0:
+        break;
+      case 1:
+        exit(0);
+        break;
+    }
+  }
 
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
+  Widget buildItem(BuildContext context, DocumentSnapshot document) {
+    if (document['id'] == currentUserId) {
+      return Container();
+    } else {
+      return Container(
+        child: FlatButton(
+          child: Row(
+            children: <Widget>[
+              Material(
+                child: CachedNetworkImage(
+                  placeholder: (context, url) => Container(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.0,
+                          valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                        ),
+                        width: 50.0,
+                        height: 50.0,
+                        padding: EdgeInsets.all(15.0),
+                      ),
+                  imageUrl: document['photoUrl'],
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                clipBehavior: Clip.hardEdge,
+              ),
+              Flexible(
+                child: Container(
+                  child: Column(
+                    children: <Widget>[
+                      Container(
+                        child: Text(
+                          'Nickname: ${document['nickname']}',
+                          style: TextStyle(color: primaryColor),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        margin: EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
+                      ),
+                      Container(
+                        child: Text(
+                          'About me: ${document['aboutMe'] ?? 'Not available'}',
+                          style: TextStyle(color: primaryColor),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        margin: EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
+                      )
+                    ],
+                  ),
+                  margin: EdgeInsets.only(left: 20.0),
+                ),
+              ),
+            ],
+          ),
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => Chat(
+                          peerId: document.documentID,
+                          peerAvatar: document['photoUrl'],
+                        )));
+          },
+          color: greyColor2,
+          padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        ),
+        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
+      );
+    }
+  }
 
-class _MyHomePageState extends State<MyHomePage> {
-  //var searchResults;
-  //int radioValue;
+  final GoogleSignIn googleSignIn = GoogleSignIn();
 
+  void onItemMenuPress(Choice choice) {
+    if (choice.title == 'Log out') {
+      handleSignOut();
+    } else {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => Settings()));
+    }
+  }
+
+  Future<Null> handleSignOut() async {
+    this.setState(() {
+      isLoading = true;
+    });
+
+    await FirebaseAuth.instance.signOut();
+    await googleSignIn.disconnect();
+    await googleSignIn.signOut();
+
+    this.setState(() {
+      isLoading = false;
+    });
+
+    Navigator.of(context)
+        .pushAndRemoveUntil(MaterialPageRoute(builder: (context) => MyApp()), (Route<dynamic> route) => false);
+  }
   var _futureGet;
 
-  @override
-  initState() {
-    super.initState();
-    _futureGet = getSearch(null);
-  }
   TextEditingController textController = TextEditingController();
-  
+
   Future<List<Question>> getSearch(String searchTerms) async {
     List<Question> list;
     String url =
@@ -62,34 +248,33 @@ class _MyHomePageState extends State<MyHomePage> {
       return null;
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("Search Stack Overflow topic"),
       ),
       body: Column(
         children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Expanded(child:TextField(
-                    decoration: InputDecoration(
-                        hintText: 'Please enter a search term'),
-                  controller: textController,)),
-          RaisedButton(child: Icon(Icons.search), onPressed: () {
-            setState(() {
-              
-              _futureGet = getSearch(textController.value.text);
-            });
-              
+          Row(
+            children: <Widget>[
+              Expanded(child:TextField(
+                decoration: InputDecoration(
+                    hintText: 'Please enter a search term'),
+                controller: textController,)),
+              RaisedButton(child: Icon(Icons.search), onPressed: () {
+                setState(() {
 
-          }),
-                ],
-              ),
+                  _futureGet = getSearch(textController.value.text);
+                });
+
+
+              }),
+            ],
+          ),
           FutureBuilder<List<Question>>(
               future:
-                  _futureGet,
+              _futureGet,
               builder: (BuildContext context,
                   AsyncSnapshot<List<Question>> snapshot) {
                 switch (snapshot.connectionState) {
@@ -124,14 +309,19 @@ class _MyHomePageState extends State<MyHomePage> {
             _launchUrl('https://stackoverflow.com/questions/' +
                 question.question_id.toString());
           }),
-      /*onTap: () {
+
+
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatScreen(question_id: question.question_id),
-          ),
+            builder: (context) => Chat(
+          peerId: question.question_id.toString(),
+          peerAvatar: '',
+            )),
         );
-                  },*/
+      },
+
     );
   }
 
@@ -142,6 +332,13 @@ class _MyHomePageState extends State<MyHomePage> {
       throw 'Não foi possível abrir: $url';
     }
   }
+}
+
+class Choice {
+  const Choice({this.title, this.icon});
+
+  final String title;
+  final IconData icon;
 }
 
 class Question {
