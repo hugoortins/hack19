@@ -31,12 +31,15 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   //var searchResults;
   //int radioValue;
+
+  var _futureGet;
+
   @override
   initState() {
     super.initState();
-    this.getSearch(null);
+    _futureGet = getSearch(null);
   }
-  GlobalKey<EditableTextState> textkeys = GlobalKey<EditableTextState>();
+  TextEditingController textController = TextEditingController();
   
   Future<List<Question>> getSearch(String searchTerms) async {
     List<Question> list;
@@ -68,42 +71,25 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Column(
         children: <Widget>[
-              TextField(
-                decoration: InputDecoration(
-                    hintText: 'Please enter a search term'),
-              key: textkeys,),
+              Row(
+                children: <Widget>[
+                  Expanded(child:TextField(
+                    decoration: InputDecoration(
+                        hintText: 'Please enter a search term'),
+                  controller: textController,)),
           RaisedButton(child: Icon(Icons.search), onPressed: () {
-
-              String text = textkeys.currentState.textEditingValue.text;
+            setState(() {
               
-              FutureBuilder<List<Question>>(
-              future:
-                  getSearch(text),
-              builder: (BuildContext context,
-                  AsyncSnapshot<List<Question>> snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.none:
-                    return Text('Press button to start.');
-                  case ConnectionState.active:
-                  case ConnectionState.waiting:
-                    return Text("Please wait.");
-                  case ConnectionState.done:
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return ListView(
-                        shrinkWrap: true,
-                        children: snapshot.data.map(getQuestionItem).toList(),
-                      );
-                    }
-                }
-                return null; // unreachable
-              });
+              _futureGet = getSearch(textController.value.text);
+            });
+              
 
           }),
+                ],
+              ),
           FutureBuilder<List<Question>>(
               future:
-                  getSearch(null),
+                  _futureGet,
               builder: (BuildContext context,
                   AsyncSnapshot<List<Question>> snapshot) {
                 switch (snapshot.connectionState) {
