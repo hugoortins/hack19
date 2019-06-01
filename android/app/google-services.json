@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "47554618479",
+    "firebase_url": "https://stackoverflowchat-326f1.firebaseio.com",
+    "project_id": "stackoverflowchat-326f1",
+    "storage_bucket": "stackoverflowchat-326f1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:47554618479:android:b49815d861791af7",
+        "android_client_info": {
+          "package_name": "flutter.chat.stackoverflow"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "47554618479-gki0k7j4lij57cfid3h52juugu477nlt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "flutter.chat.stackoverflow",
+            "certificate_hash": "fb04964dab1c2d00773b09e91accaae078d19ed0"
+          }
+        },
+        {
+          "client_id": "47554618479-nnetehr9n7qpirra2bjpb6sd89vg6gkn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrBaopO64uQ_75md0lnxPeIccNxFkggLs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "47554618479-nnetehr9n7qpirra2bjpb6sd89vg6gkn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
