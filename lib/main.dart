@@ -36,12 +36,17 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     this.getSearch(null);
   }
-
-  Future<List<Question>> getSearch(String search) async {
+  GlobalKey<EditableTextState> textkeys = GlobalKey<EditableTextState>();
+  
+  Future<List<Question>> getSearch(String searchTerms) async {
     List<Question> list;
-
     String url =
         "https://api.stackexchange.com/2.2/search/advanced?pagesize=10&order=desc&sort=activity&tagged=flutter&site=stackoverflow";
+    if (searchTerms != null) {
+      url =
+          "https://api.stackexchange.com/2.2/search/advanced?pagesize=10&order=desc&sort=activity&tagged=flutter&site=stackoverflow&title=" + searchTerms;
+    }
+
     final response = await http.get(url);
 
     if (response.statusCode == 200 && response.body != null) {
@@ -63,10 +68,42 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Column(
         children: <Widget>[
-          Text(""),
+              TextField(
+                decoration: InputDecoration(
+                    hintText: 'Please enter a search term'),
+              key: textkeys,),
+          RaisedButton(child: Icon(Icons.search), onPressed: () {
+
+              String text = textkeys.currentState.textEditingValue.text;
+              
+              FutureBuilder<List<Question>>(
+              future:
+                  getSearch(text),
+              builder: (BuildContext context,
+                  AsyncSnapshot<List<Question>> snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.none:
+                    return Text('Press button to start.');
+                  case ConnectionState.active:
+                  case ConnectionState.waiting:
+                    return Text("Please wait.");
+                  case ConnectionState.done:
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      return ListView(
+                        shrinkWrap: true,
+                        children: snapshot.data.map(getQuestionItem).toList(),
+                      );
+                    }
+                }
+                return null; // unreachable
+              });
+
+          }),
           FutureBuilder<List<Question>>(
-              future: getSearch(
-                  null), // a previously-obtained Future<String> or null
+              future:
+                  getSearch(null),
               builder: (BuildContext context,
                   AsyncSnapshot<List<Question>> snapshot) {
                 switch (snapshot.connectionState) {
